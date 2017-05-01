@@ -21,7 +21,7 @@ import org.opencv.core.Size;
  */
 public class MatchArcs {
     private static final int LENGTH = 3;
-    private static final double CNC_THRESH = 0.2;
+    private static final double CNC_THRESH = 0.35;
     
     private static double[][] p = new double[3][2];
     private static double[][][] q = new double[3][2][2];
@@ -169,5 +169,18 @@ public class MatchArcs {
 
     private static double distance(double p1X, double p1Y, double p2X, double p2Y) {
         return Math.sqrt(Math.pow(p1X - p2X, 2) + Math.pow(p1Y - p2Y, 2));
+    }
+    
+    public static double calcMinDistance(MatOfPoint arc1, MatOfPoint arc2) {
+        return calcMinDistance(arc1.toArray(), arc2.toArray());
+    }
+    
+    public static double calcMinDistance(Point[] arc1, Point[] arc2) {
+        if (arc1.length != LENGTH || arc2.length != LENGTH) {
+            throw new InvalidParameterException("Arcs must only be made up of 2 end points and a mid point");
+        }
+        int[] closest = findClosestPointsBetweenArcs(arc1, arc2);
+        return distance(arc1[closest[0]].x, arc1[closest[0]].y,
+                        arc2[closest[1]].x, arc2[closest[1]].y);
     }
 }

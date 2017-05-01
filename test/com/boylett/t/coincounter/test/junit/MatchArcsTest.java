@@ -93,12 +93,13 @@ public class MatchArcsTest {
             // 6
             {
                 {
-                    new Point(642.0, 467.0),
-                    new Point(711.0, 542.0),
-                    new Point(804.0, 557.0)
+                    new Point(827.0, 368.0),
+                    new Point(903.0, 394.0),
+                    new Point(940.0, 450.0)
                 },
                 {
-                    new Point(947.0, 466.0),
+                    
+                    new Point(940.0, 480.0),
                     new Point(899.0, 532.0),
                     new Point(827.0, 555.0)
                 }

@@ -14,6 +14,7 @@ import org.opencv.core.Point;
  * @author tomson
  */
 public class EllipseDetection {
+    private static final int MAX_DISTANCE = 1000;
     
     List<MatOfPoint> arcComb;
     QuadrantSet qs;
@@ -67,46 +68,42 @@ public class EllipseDetection {
         List<MatOfPoint> arcs2 = qs.get(Math.floorMod(i - 1, 4));
         List<MatOfPoint> arcs3 = qs.get(Math.floorMod(i - 2, 4));
         
-        ListIterator<MatOfPoint> it2 = arcs2.listIterator();
-        while(it2.hasNext()) {
-            MatOfPoint arc2 = it2.next();
-            ListIterator<MatOfPoint> it1 = arcs1.listIterator();
-            while(it1.hasNext()) {
-                MatOfPoint arc1 = it1.next();
-                
-                if (!meetsCoordCon(arc1, arc2, i) ||
-                        !MatchArcs.isMatch(arc1, arc2)) {
+        for (int i2 = 0; i2 < arcs2.size(); i2++) {
+            for (int i1 = 0; i1 < arcs1.size(); i1++) {
+                if (!meetsCoordCon(arcs1.get(i1), arcs2.get(i2), i) ||
+                    !MatchArcs.isMatch(arcs1.get(i1), arcs2.get(i2)) ||
+                    !meetsDistCon(arcs1.get(i1), arcs2.get(i2))) {
                     continue;
                 }
-                
-                ListIterator<MatOfPoint> it3 = arcs3.listIterator();
-                while(it3.hasNext()) {
-                    MatOfPoint arc3 = it3.next();
-                    
-                    if (!meetsCoordCon(arc2, arc3, Math.floorMod(i - 1, 4)) ||
-                            !MatchArcs.isMatch(arc2, arc3)) {
+                for (int i3 = 0; i3 < arcs3.size(); i3++) {
+                    if (!meetsCoordCon(arcs2.get(i2), arcs3.get(i3), Math.floorMod(i - 1, 4)) ||
+                        !MatchArcs.isMatch(arcs2.get(i2), arcs3.get(i3)) ||
+                        !meetsDistCon(arcs2.get(i2), arcs3.get(i3))) {
                         continue;
                     }
-                    
                     MatOfPoint pointSet = new MatOfPoint();
-                    pointSet.alloc(arc1.rows() + arc2.rows() + arc3.rows());
+                    pointSet.alloc(arcs1.get(i1).rows() + arcs2.get(i2).rows() + arcs3.get(i3).rows());
                     
-                    int[] buffer = new int[2 * arc1.rows()];
-                    arc1.get(0, 0, buffer);
+                    int[] buffer = new int[2 * arcs1.get(i1).rows()];
+                    arcs1.get(i1).get(0, 0, buffer);
                     pointSet.put(0, 0, buffer);
                     
-                    buffer = new int[2 * arc2.rows()];
-                    arc2.get(0, 0, buffer);
-                    pointSet.put(arc1.rows(), 0, buffer);
+                    buffer = new int[2 * arcs2.get(i2).rows()];
+                    arcs2.get(i2).get(0, 0, buffer);
+                    pointSet.put(arcs1.get(i1).rows(), 0, buffer);
                     
-                    buffer = new int[2 * arc3.rows()];
-                    arc3.get(0, 0, buffer);
-                    pointSet.put(arc1.rows() + arc2.rows(), 0, buffer);
+                    buffer = new int[2 * arcs3.get(i3).rows()];
+                    arcs3.get(i3).get(0, 0, buffer);
+                    pointSet.put(arcs1.get(i1).rows() + arcs2.get(i2).rows(), 0, buffer);
                     
                     arcComb.add(pointSet);
                 }
             }
         }
+    }
+    
+    private boolean meetsDistCon(MatOfPoint arc1, MatOfPoint arc2) {
+        return MatchArcs.calcMinDistance(arc1, arc2) <= MAX_DISTANCE;
     }
     
     /**

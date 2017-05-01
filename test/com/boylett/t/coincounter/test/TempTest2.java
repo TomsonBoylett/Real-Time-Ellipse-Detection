@@ -28,7 +28,7 @@ import org.opencv.imgproc.Imgproc;
 public class TempTest2 {
     public static void main(String[] args) throws IOException {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        Mat m = Imgcodecs.imread("/home/tomson/Documents/CoinCounting/test2.png");
+        Mat m = Imgcodecs.imread("/home/tomson/Documents/CoinCounting/test3.jpg");
         EllipseDetection ed = new EllipseDetection();
         QuadrantSet qs = ed.findQuadrantSet(m);
         
@@ -36,9 +36,6 @@ public class TempTest2 {
         Imgproc.polylines(m, qs.getArcII(), false, new Scalar(0,0,255), 2);
         Imgproc.polylines(m, qs.getArcIII(), false, new Scalar(0,0,255), 2);
         Imgproc.polylines(m, qs.getArcIV(), false, new Scalar(0,0,255), 2);
-        System.out.println(Arrays.toString(qs.getArcI().get(2).toArray()));
-        System.out.println(Arrays.toString(qs.getArcIII().get(2).toArray()));
-        System.out.println(Arrays.toString(qs.getArcIV().get(2).toArray()));
         
         ed.arcPicking(0);
         ed.arcPicking(1);
