@@ -17,6 +17,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -28,7 +29,7 @@ import org.opencv.imgproc.Imgproc;
 public class TempTest2 {
     public static void main(String[] args) throws IOException {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        Mat m = Imgcodecs.imread("/home/tomson/Documents/CoinCounting/test3.jpg");
+        Mat m = Imgcodecs.imread("/home/tomson/Documents/CoinCounting/cointest.jpg");
         EllipseDetection ed = new EllipseDetection();
         QuadrantSet qs = ed.findQuadrantSet(m);
         
@@ -37,31 +38,16 @@ public class TempTest2 {
         Imgproc.polylines(m, qs.getArcIII(), false, new Scalar(0,0,255), 2);
         Imgproc.polylines(m, qs.getArcIV(), false, new Scalar(0,0,255), 2);
         
-        ed.arcPicking(0);
-        ed.arcPicking(1);
-        ed.arcPicking(2);
-        ed.arcPicking(3);
+        ed.pickArcs();
+        ed.fitEllipses();
+        ed.removeDuplicates();
         
-        /*
-        ListIterator<MatOfPoint> it = test.listIterator();
-        while (it.hasNext()) {
-            MatOfPoint mop = it.next();
-            double max = 0.0;
-            Point[] points = mop.toArray();
-            for (int i = 0; i < points.length - 1; i++) {
-                double d = distance(points[i].x, points[i].y, points[i+1].x, points[i+1].y);
-                if (d > max) {
-                    max = d;
-                }
-            }
-            if (max > 300) {
-                it.remove();
-            }
+        List<RotatedRect> es = ed.getEllipses();
+        for (RotatedRect e : es) {
+            Imgproc.ellipse(m, e, new Scalar(255, 0, 0), 2);
         }
-        */
         
-        
-        Imgproc.polylines(m, ed.getArcComb(), false, new Scalar(255,0,0), 2);
+        //Imgproc.polylines(m, ed.getArcComb(), false, new Scalar(255,0,0), 2);
         /*
         for (MatOfPoint mop : qs.getArcIII()) {
             System.out.println(Arrays.toString(mop.toArray()));

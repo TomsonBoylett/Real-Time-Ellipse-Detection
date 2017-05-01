@@ -167,7 +167,7 @@ public class MatchArcs {
         return minIndex;
     }
 
-    private static double distance(double p1X, double p1Y, double p2X, double p2Y) {
+    public static double distance(double p1X, double p1Y, double p2X, double p2Y) {
         return Math.sqrt(Math.pow(p1X - p2X, 2) + Math.pow(p1Y - p2Y, 2));
     }
     
