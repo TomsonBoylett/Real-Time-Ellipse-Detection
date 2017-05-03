@@ -5,6 +5,7 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import static org.opencv.core.CvType.CV_16S;
 import static org.opencv.core.CvType.CV_8UC1;
 import org.opencv.core.Mat;
@@ -25,12 +26,70 @@ public class HalfSetDetection {
     private static final int SOBEL_DEPTH = CV_16S;
     private static final int CONT_RETR_MODE = Imgproc.RETR_LIST;
     private static final int CONT_CHAIN_APPROX = Imgproc.CHAIN_APPROX_NONE;
-    private static final Size KSIZE = new Size(5, 5); // For gaussian blur
-    private static final int CANNY_LOWER_THRESH = 50;
-    private static final int CANNY_UPPER_THRESH = 150;
 
     private List<MatOfPoint> contoursII_IV = null;
     private List<MatOfPoint> contoursI_III = null;
+    private Size ksize;
+    private int cannyLower;
+    private int cannyUpper;
+    
+    private HalfSetDetection(){}
+    
+    private HalfSetDetection(Size ksize, int cannyLower, int cannyUpper) {
+        this.ksize = ksize;
+        this.cannyLower = cannyLower;
+        this.cannyUpper = cannyUpper;
+    }
+    
+    public static class Builder {
+        private static final Size KSIZE = new Size(5, 5); // For gaussian blur
+        private static final int CANNY_LOWER_THRESH = 50;
+        private static final int CANNY_UPPER_THRESH = 150;
+    
+        private Size ksize;
+        private int cannyLower;
+        private int cannyUpper;
+        
+        public Builder() {
+            setToDefault();
+        }
+        
+        public final Builder setToDefault() {
+            ksize = KSIZE;
+            cannyLower = CANNY_LOWER_THRESH;
+            cannyUpper = CANNY_UPPER_THRESH;
+            return this;
+        }
+        
+        public Builder setKSize(Size ksize) {
+            if ((ksize.width  < 1 || ksize.width  % 2 == 0) ||
+                (ksize.height < 1 || ksize.height % 2 == 0)) {
+                throw new InvalidParameterException("ksize dimensions must be positive, odd integers");
+            }
+            this.ksize = ksize;
+            return this;
+        }
+        
+        public Builder setCannyLower(int cannyLower) {
+            if (cannyLower < 0) {
+                throw new InvalidParameterException("Canny lower threshold must be positive");
+            }
+            this.cannyLower = cannyLower;
+            return this;
+        }
+        
+        public Builder setCannyUpper(int cannyUpper) {
+            if (cannyUpper < 0) {
+                throw new InvalidParameterException("Canny upper threshold must be positive");
+            }
+            this.cannyUpper = cannyUpper;
+            return this;
+        }
+        
+        public HalfSetDetection build() {
+            return new HalfSetDetection(ksize, cannyLower, cannyUpper);
+        }
+    }
 
     public List<MatOfPoint> getContoursII_IV() {
         if (contoursII_IV == null) {
@@ -59,8 +118,15 @@ public class HalfSetDetection {
         if (img.channels() != 1 && img.channels() != 3) {
             throw new InvalidParameterException("Image must be greyscale or RGB");
         }
+        if (img.dims() > 2 || img.rows() == 0 || img.cols() == 0) {
+            throw new InvalidParameterException("Image has invalid dimensions");
+        }
+        if (img.depth() != CvType.CV_8U) {
+            throw new InvalidParameterException("Image must have a bit depth of 8 and be unsigned");
+        }
+        
         // Remove noise
-        Mat img2 = removeNoise(img, KSIZE);
+        Mat img2 = removeNoise(img, ksize);
         
         // Convert image to greyscale (if needed)
         if (img2.channels() == 3) {
@@ -131,7 +197,7 @@ public class HalfSetDetection {
      */
     private Mat canny(Mat m) {
         Mat edges = new Mat();
-        Imgproc.Canny(m, edges, CANNY_LOWER_THRESH, CANNY_UPPER_THRESH);
+        Imgproc.Canny(m, edges, cannyLower, cannyUpper);
         return edges;
     }
     

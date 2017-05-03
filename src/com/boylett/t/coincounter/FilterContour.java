@@ -42,7 +42,7 @@ public class FilterContour {
      * @param keyPointList List of contours containing three points - start, middle, end.
      * @param straightThresh Straightness threshold
      */
-    public static void straightness(List<KeyPoints> keyPointList, double straightThresh) {
+    public static void straightness(List<MatOfPoint> keyPointList, double straightThresh) {
         for (int i = 0; i < keyPointList.size(); i++) {
             double straightness
                     = Imgproc.contourArea(keyPointList.get(i))

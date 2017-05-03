@@ -24,12 +24,55 @@ import org.opencv.imgproc.Imgproc;
  * @author tomson
  */
 public class QuadrantSetDetection {
-    private static final int MINIMUM_CONTOUR_LENGTH = 10;
-    private static final double STRAIGHT_THRESH = 1.5;
-    
-    private QuadrantSet qs = new QuadrantSet();
+    private int minContLen;
+    private double straightThresh;
+    private HalfSetDetection hsd;
 
-    public QuadrantSetDetection() {
+    private QuadrantSetDetection() {}
+    
+    private QuadrantSetDetection(int minContLen, double straightThresh, HalfSetDetection hsd) {
+       this.minContLen = minContLen;
+       this.straightThresh = straightThresh;
+       this.hsd = hsd;
+    }
+    
+    public static class Builder {
+        private static final int MINIMUM_CONTOUR_LENGTH = 10;
+        private static final double STRAIGHT_THRESH = 1.5;
+        
+        private int minContLen;
+        private double straightThresh;
+        private HalfSetDetection hsd;
+        
+        public Builder() {
+            setToDefault();
+        }
+        
+        public final Builder setToDefault() {
+            minContLen = MINIMUM_CONTOUR_LENGTH;
+            straightThresh = STRAIGHT_THRESH;
+            hsd = new HalfSetDetection.Builder().build();
+            return this;
+        }
+        
+        public Builder setMinContLen(int minContLen) {
+            this.minContLen = minContLen;
+            return this;
+        }
+
+        public Builder setStraightThresh(double straightThresh) {
+            this.straightThresh = straightThresh;
+            return this;
+        }
+        
+        public Builder setHalfSetDetection(HalfSetDetection hsd) {
+            this.hsd = hsd;
+            return this;
+        }
+        
+        public QuadrantSetDetection build() {
+            return new QuadrantSetDetection(minContLen, straightThresh, hsd);
+        }
     }
     
     /**
@@ -43,9 +86,8 @@ public class QuadrantSetDetection {
      * @param img image
      * @return Quadrant set
      */
-    public QuadrantSet findQuadrantSet(Mat img) {
+    public QuadrantSet detect(Mat img) {
         // Find half sets
-        HalfSetDetection hsd = new HalfSetDetection();
         hsd.detectArcHalfSets(img);
         List<MatOfPoint> cntII_IV = hsd.getContoursII_IV();
         List<MatOfPoint> cntI_III = hsd.getContoursI_III();
@@ -53,6 +95,8 @@ public class QuadrantSetDetection {
         // Filter arcs
         filterCandidateArcs(cntII_IV);
         filterCandidateArcs(cntI_III);
+        
+        QuadrantSet qs = new QuadrantSet();
 
         // Split half sets into quadrant sets;
         splitContoursByPixelCount(cntII_IV, qs.getArcIV(), qs.getArcII());
@@ -159,18 +203,21 @@ public class QuadrantSetDetection {
     /**
      * Calls multiple methods that filter the contours
      * 
+     * This method is destructive and reduces each contour in halfSet
+     * to 3 points: start, middle and end.
+     * 
      * @param halfSet 
      */
     private void filterCandidateArcs(List<MatOfPoint> halfSet) {
-        FilterContour.length(halfSet, MINIMUM_CONTOUR_LENGTH);
+        FilterContour.length(halfSet, minContLen);
 
         // Simplify contours into 3 points
-        List<KeyPoints> kpHalfSet = KeyPoints.createKeyPointList(halfSet);
+        List<MatOfPoint> kpHalfSet = KeyPoint.createKeyPointList(halfSet);
         
-        FilterContour.straightness(kpHalfSet, STRAIGHT_THRESH);
-
+        FilterContour.straightness(kpHalfSet, straightThresh);
+        
         halfSet.clear();
-
+        
         halfSet.addAll(kpHalfSet);
     }
 }

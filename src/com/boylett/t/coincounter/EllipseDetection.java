@@ -45,8 +45,8 @@ public class EllipseDetection {
      */
     public QuadrantSet findQuadrantSet(Mat img) {
         this.img = img;
-        QuadrantSetDetection qsd = new QuadrantSetDetection();
-        qs = qsd.findQuadrantSet(img);
+        QuadrantSetDetection qsd = new QuadrantSetDetection.Builder().build();
+        qs = qsd.detect(img);
         return qs;
     }
     

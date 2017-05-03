@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -30,6 +31,7 @@ public class TempTest2 {
     public static void main(String[] args) throws IOException {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         Mat m = Imgcodecs.imread("/home/tomson/Documents/CoinCounting/cointest.jpg");
+        m = new Mat(30000, 30000, CvType.CV_8U);
         EllipseDetection ed = new EllipseDetection();
         QuadrantSet qs = ed.findQuadrantSet(m);
         
