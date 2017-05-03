@@ -56,11 +56,17 @@ public class QuadrantSetDetection {
         }
         
         public Builder setMinContLen(int minContLen) {
+            if (minContLen < 3) {
+                throw new InvalidParameterException("Minimum contour length must be atleast 3");
+            }
             this.minContLen = minContLen;
             return this;
         }
 
         public Builder setStraightThresh(double straightThresh) {
+            if (straightThresh < 0) {
+                throw new InvalidParameterException("Straightness threshold must be positive");
+            }
             this.straightThresh = straightThresh;
             return this;
         }
