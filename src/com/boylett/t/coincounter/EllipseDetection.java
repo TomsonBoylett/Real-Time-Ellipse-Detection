@@ -22,7 +22,7 @@ import org.opencv.imgproc.Imgproc;
 public class EllipseDetection {
     private static final double MAX_DISTANCE_FACTOR = 2.0;
     private static final double LIMIT = 0.1;
-    private static final double PERIMETER_RATIO_MIN = 0.1;
+    private static final double PERIMETER_RATIO_MIN = 0.2;
     private static final double ELLIPSE_THRESH = 0.09;
     private static final int MIN_COUNT = 9;
     
@@ -149,13 +149,11 @@ public class EllipseDetection {
         for (int i2 = 0; i2 < arcs2.size(); i2++) {
             for (int i1 = 0; i1 < arcs1.size(); i1++) {
                 if (!meetsCoordCon(arcs1.get(i1), arcs2.get(i2), i) ||
-                    !MatchArcs.isMatch(arcs1.get(i1), arcs2.get(i2)) ||
-                    !meetsDistCon(arcs1.get(i1), arcs2.get(i2))) {
+                    !MatchArcs.isMatch(arcs1.get(i1), arcs2.get(i2))) {
                     continue;
                 }
                 for (int i3 = 0; i3 < arcs3.size(); i3++) {
-                    if (!meetsCoordCon(arcs2.get(i2), arcs3.get(i3), Math.floorMod(i - 1, 4)) ||
-                        !meetsDistCon(arcs2.get(i2), arcs3.get(i3))) {
+                    if (!meetsCoordCon(arcs2.get(i2), arcs3.get(i3), Math.floorMod(i - 1, 4))) {
                         continue;
                     }
                     MatOfPoint pointSet = new MatOfPoint();
@@ -177,12 +175,6 @@ public class EllipseDetection {
                 }
             }
         }
-    }
-    
-    private boolean meetsDistCon(MatOfPoint arc1, MatOfPoint arc2) {
-        return MatchArcs.calcMinDistance(arc1, arc2) * MAX_DISTANCE_FACTOR <
-                Imgproc.arcLength(new MatOfPoint2f(arc1.toArray()), false) +
-                Imgproc.arcLength(new MatOfPoint2f(arc2.toArray()), false);
     }
     
     /**
