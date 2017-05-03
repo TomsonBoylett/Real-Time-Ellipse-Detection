@@ -1,6 +1,7 @@
 package com.boylett.t.coincounter;
 
 import java.security.InvalidParameterException;
+import org.opencv.core.CvType;
 import static org.opencv.core.CvType.CV_8UC1;
 import org.opencv.core.Mat;
 
@@ -14,8 +15,7 @@ public class GradMat {
     private Mat gradY;
 
     public GradMat(Mat gradX, Mat gradY) {
-        setGradX(gradX);
-        setGradY(gradY);
+        setGradXY(gradX, gradY);
     }
     
     /**
@@ -23,8 +23,6 @@ public class GradMat {
      * Specifically it returns a mask which corresponds to pixels
      * with a positive gradient.
      * 
-     * @param gradX Matrix of gradients in the x direction
-     * @param gradY Matrix of gradients in the y direction
      * @return binary mask
      */
     public Mat generateMask() {
@@ -52,24 +50,31 @@ public class GradMat {
     public Mat getGradX() {
         return gradX;
     }
-
-    public void setGradX(Mat gradX) {
-        if (gradX.channels() != 1) {
-            throw new InvalidParameterException(
-                    "Gradient images should only have 1 channel");
+    
+    public final void setGradXY(Mat gradX, Mat gradY) {
+        checkGrad(gradX);
+        checkGrad(gradY);
+        if (gradX.rows() != gradY.rows() ||
+            gradX.cols() != gradY.cols()) {
+            throw new InvalidParameterException("Gradient images must be the same size");
         }
         this.gradX = gradX;
+        this.gradY = gradY;
     }
 
     public Mat getGradY() {
         return gradY;
     }
-
-    public void setGradY(Mat gradY) {
-        if (gradY.channels() != 1) {
-            throw new InvalidParameterException(
-                    "Gradient images should only have 1 channel");
+    
+    private void checkGrad(Mat grad) {
+        if (grad.channels() != 1) {
+            throw new InvalidParameterException("Gradent image must have 1 channel");
         }
-        this.gradY = gradY;
-    }   
+        if (grad.dims() > 2 || grad.rows() == 0 || grad.cols() == 0) {
+            throw new InvalidParameterException("Gradent image has invalid dimensions");
+        }
+        if (grad.depth() != CvType.CV_16S) {
+            throw new InvalidParameterException("Image must have a bit depth of 16 and be signed");
+        }
+    }
 }
