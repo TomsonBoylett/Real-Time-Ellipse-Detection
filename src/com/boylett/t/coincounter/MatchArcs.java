@@ -6,6 +6,9 @@
 package com.boylett.t.coincounter;
 
 import java.security.InvalidParameterException;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.stream.IntStream;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -21,14 +24,23 @@ import org.opencv.core.Size;
  */
 public class MatchArcs {
     private static final double CNC_THRESH = 0.35;
+    private static final double NO_MATCH = 1.1 + CNC_THRESH;
     
-    private static double[][] p = new double[3][2];
-    private static double[][][] q = new double[3][2][2];
-    private static double[][] a = new double[3][2];
-    private static double[][] b = new double[3][2];
+    private double threshold;
+    private Point[] p;
+    private Line[] q;
+    private double[][] a;
+    private double[][] b;
     
-    public static boolean isMatch(MatOfPoint arc1, MatOfPoint arc2) {
-        return isMatch(arc1.toArray(), arc2.toArray());
+    public MatchArcs() {
+        threshold = CNC_THRESH;
+    }
+    
+    public MatchArcs(double threshold) {
+        if (threshold < 0) {
+            throw new InvalidParameterException("Threshold must be positive!");
+        }
+        this.threshold = threshold;
     }
     
     /**
@@ -38,55 +50,55 @@ public class MatchArcs {
      * @param arc2
      * @return True if both arcs come from the same ellipse
      */
-    public static boolean isMatch(Point[] arc1, Point[] arc2) {
-        return Math.abs(1 - cnc(arc1, arc2)) < CNC_THRESH;
+    public boolean isMatch(Point[] arc1, Point[] arc2) {
+        return Math.abs(1 - cnc(arc1, arc2)) < threshold;
     }
     
-    public static double cnc(Point[] arc1, Point[] arc2) {
+    public boolean isMatch(MatOfPoint arc1, MatOfPoint arc2) {
+        return isMatch(arc1.toArray(), arc2.toArray());
+    }
+    
+    public double cnc(Point[] arc1, Point[] arc2) {
         if (arc1.length != KeyPoint.LENGTH || arc2.length != KeyPoint.LENGTH) {
             throw new InvalidParameterException("Arcs must only be made up of 2 end points and a mid point");
         }
-        setQ(arc1, arc2);
+        
+        calcQ(arc1, arc2);
+        if (!calcP()) {
+            return NO_MATCH;
+        }
+        
         return calculateCNC();
     }
     
-    private static void setQ(Point[] arc1, Point[] arc2) {
-        int[] closest = findClosestPointsBetweenArcs(arc1, arc2);
-        int[] furthest = {closest[0] == 0 ? 2 : 0, closest[1] == 0 ? 2 : 0};
+    private Line[] calcQ(Point[] arc1, Point[] arc2) {
+        q = new Line[3];
+        int[] close = findClosestPointsBetweenArcs(arc1, arc2);
+        int[] far = {close[0] == 0 ? 2 : 0, close[1] == 0 ? 2 : 0};
         
-        // Set midpoints
-        // 3 lines, 2 points per line, each point has x and y
-        q[0][1][0] = arc1[1].x;
-        q[0][1][1] = arc1[1].y;
-        q[2][0][0] = arc2[1].x;
-        q[2][0][1] = arc2[1].y;
-
-        // Set closest endpoints
-        q[1][0][0] = arc1[closest[0]].x;
-        q[1][0][1] = arc1[closest[0]].y;
-        q[1][1][0] = arc2[closest[1]].x;
-        q[1][1][1] = arc2[closest[1]].y;
-
-        // Set furthest endpoints
-        q[0][0][0] = arc1[furthest[0]].x;
-        q[0][0][1] = arc1[furthest[0]].y;
-        q[2][1][0] = arc2[furthest[1]].x;
-        q[2][1][1] = arc2[furthest[1]].y;
+        q[0] = new Line(arc1[far[0]], arc1[1]);
+        
+        q[1] = new Line(arc1[close[0]], arc2[close[1]]);
+        
+        q[2] = new Line(arc2[1], arc2[far[1]]);
+        
+        return q;
     }
     
-    private static void calculateP() {
-        p[0] = intersection(q[0][0], q[0][1], q[2][1], q[2][0]);
-        p[1] = intersection(q[0][0], q[0][1], q[1][0], q[1][1]);
-        p[2] = intersection(q[2][1], q[2][0], q[1][0], q[1][1]);
-    }
-    
-    private static double calculateCNC() {
-        calculateP();
-        for (int i = 0; i < p.length; i++) {
+    private boolean calcP() {
+        p = new Point[3];
+        for (int i = 0; i < 3; i++) {
+            // j is index of the next line going clockwise around the triangle
+            int j = (i + 2) % 3;
+            p[i] = q[i].intersect(q[j]);
             if (p[i] == null) {
-                return -1.0;
+                return false;
             }
         }
+        return true;
+    }
+    
+    private double calculateCNC() {
         calculateAllCoeffs();
         double product = 1.0;
         for (int i = 0; i < 3; i++) {
@@ -97,7 +109,9 @@ public class MatchArcs {
         return product;
     }
     
-    private static void calculateAllCoeffs() {
+    private void calculateAllCoeffs() {
+        a = new double[3][2];
+        b = new double[3][2];
         for(int i = 0; i < 3; i++) {
             for(int j = 0; j < 2; j++) {
                 calculateCoeff(i, j);
@@ -105,16 +119,16 @@ public class MatchArcs {
         }
     }
     
-    private static void calculateCoeff(int i, int j) {
+    private void calculateCoeff(int i, int j) {
         Mat K = new Mat(2, 2, CvType.CV_64FC1);
-        K.put(0, 0, p[i][0]);
-        K.put(0, 1, p[(i+1)%3][0]);
-        K.put(1, 0, p[i][1]);
-        K.put(1, 1, p[(i+1)%3][1]);
+        K.put(0, 0, p[i].x);
+        K.put(0, 1, p[(i+1)%3].x);
+        K.put(1, 0, p[i].y);
+        K.put(1, 1, p[(i+1)%3].y);
         
         Mat M = new Mat(2, 1, CvType.CV_64FC1);
-        M.put(0, 0, q[i][j][0]);
-        M.put(1, 0, q[i][j][1]);
+        M.put(0, 0, q[i].get(j).x);
+        M.put(1, 0, q[i].get(j).y);
         
         Core.invert(K, K);
         
@@ -123,39 +137,14 @@ public class MatchArcs {
         a[i][j] = M.get(0, 0)[0];
         b[i][j] = M.get(1, 0)[0];
     }
-    
-    /**
-     * Computes the intersection between two lines.
-     * (c) 2007 Alexander Hristov. Use Freely (LGPL
-     * license). http://www.ahristov.com
-     *
-     * @param p1 Point 1 of line 1
-     * @param p2 Point 2 of line 1
-     * @param p3 Point 1 of line 2
-     * @param p4 Point 2 of line 2
-     *
-     * @return Point where the segments intersect, or null if they don't
-     */
-    private static double[] intersection(
-            double[] p1, double[] p2,
-            double[] p3, double[] p4) {
-        double d = (p1[0] - p2[0]) * (p3[1] - p4[1]) - (p1[1] - p2[1]) * (p3[0] - p4[0]);
-        if (d == 0) {
-            return null;
-        }
 
-        double xi = ((p3[0] - p4[0]) * (p1[0] * p2[1] - p1[1] * p2[0]) - (p1[0] - p2[0]) * (p3[0] * p4[1] - p3[1] * p4[0])) / d;
-        double yi = ((p3[1] - p4[1]) * (p1[0] * p2[1] - p1[1] * p2[0]) - (p1[1] - p2[1]) * (p3[0] * p4[1] - p3[1] * p4[0])) / d;
-
-        return new double[]{xi, yi};
-    }
-
-    private static int[] findClosestPointsBetweenArcs(Point[] arc1, Point[] arc2) {
+    private int[] findClosestPointsBetweenArcs(Point[] arc1, Point[] arc2) {
         double minDist = Double.MAX_VALUE;
         int[] minIndex = {-1, -1};
+        
         for (int i = 0; i <= 2; i += 2) {
             for (int j = 0; j <= 2; j += 2) {
-                double dist = distance(arc1[i].x, arc1[i].y, arc2[j].x, arc2[j].y);
+                double dist = distance(arc1[i], arc2[j]);
                 if (dist < minDist) {
                     minDist = dist;
                     minIndex[0] = i;
@@ -163,23 +152,11 @@ public class MatchArcs {
                 }
             }
         }
+        
         return minIndex;
     }
 
-    public static double distance(double p1X, double p1Y, double p2X, double p2Y) {
-        return Math.sqrt(Math.pow(p1X - p2X, 2) + Math.pow(p1Y - p2Y, 2));
-    }
-    
-    public static double calcMinDistance(MatOfPoint arc1, MatOfPoint arc2) {
-        return calcMinDistance(arc1.toArray(), arc2.toArray());
-    }
-    
-    public static double calcMinDistance(Point[] arc1, Point[] arc2) {
-        if (arc1.length != KeyPoint.LENGTH || arc2.length != KeyPoint.LENGTH) {
-            throw new InvalidParameterException("Arcs must only be made up of 2 end points and a mid point");
-        }
-        int[] closest = findClosestPointsBetweenArcs(arc1, arc2);
-        return distance(arc1[closest[0]].x, arc1[closest[0]].y,
-                        arc2[closest[1]].x, arc2[closest[1]].y);
+    private double distance(Point p1, Point p2) {
+        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
     }
 }

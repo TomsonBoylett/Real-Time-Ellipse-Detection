@@ -20,10 +20,12 @@ import org.opencv.core.Point;
 public class MatchArcsTest {
     static final double DELTA = 0.001;
     Point[][][] arcs = null;
+    MatchArcs ma = null;
     
     @Before
     public void setUp() {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        ma = new MatchArcs();
         arcs = new Point[][][]{
             // 1
             {
@@ -109,31 +111,31 @@ public class MatchArcsTest {
 
     @Test
     public void test1() {
-        assertEquals(-0.411, MatchArcs.cnc(arcs[0][0], arcs[0][1]), DELTA);
+        assertEquals(-0.411, ma.cnc(arcs[0][0], arcs[0][1]), DELTA);
     }
     
     @Test
     public void test2() {
-        assertEquals(-0.007, MatchArcs.cnc(arcs[1][0], arcs[1][1]), DELTA);
+        assertEquals(-0.007, ma.cnc(arcs[1][0], arcs[1][1]), DELTA);
     }
     
     @Test
     public void test3() {
-        assertEquals(2.361, MatchArcs.cnc(arcs[2][0], arcs[2][1]), DELTA);
+        assertEquals(2.361, ma.cnc(arcs[2][0], arcs[2][1]), DELTA);
     }
     
     @Test
     public void test4() {
-        assertEquals(0.863, MatchArcs.cnc(arcs[3][0], arcs[3][1]), DELTA);
+        assertEquals(0.863, ma.cnc(arcs[3][0], arcs[3][1]), DELTA);
     }
     
     @Test
     public void test5() {
-        assertEquals(1.128, MatchArcs.cnc(arcs[4][0], arcs[4][1]), DELTA);
+        assertEquals(1.128, ma.cnc(arcs[4][0], arcs[4][1]), DELTA);
     }
     
     @Test
     public void test6() {
-        assertEquals(1.289, MatchArcs.cnc(arcs[5][0], arcs[5][1]), DELTA);
+        assertEquals(1.289, ma.cnc(arcs[5][0], arcs[5][1]), DELTA);
     }
 }
