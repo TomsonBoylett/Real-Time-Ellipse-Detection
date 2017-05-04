@@ -21,13 +21,7 @@ public class FilterContour {
      * @param minLength Minimum length required
      */
     public static void length(List<MatOfPoint> contours, int minLength) {
-        ListIterator<MatOfPoint> it = contours.listIterator();
-        while (it.hasNext()) {
-            MatOfPoint contour = it.next();
-            if (contour.rows() < minLength) {
-                it.remove();
-            }
-        }
+        contours.removeIf(c -> c.rows() < minLength);
     }
     
     /**
@@ -39,18 +33,15 @@ public class FilterContour {
      * closer this value is to 1, the closer the points are to being co-linear.
      * straightThresh is how close this value needs to be to 1.
      * 
-     * @param keyPointList List of contours containing three points - start, middle, end.
+     * @param keyPointList List of contours.
      * @param straightThresh Straightness threshold
      */
     public static void straightness(List<MatOfPoint> keyPointList, double straightThresh) {
-        for (int i = 0; i < keyPointList.size(); i++) {
+        keyPointList.removeIf(c -> {
             double straightness
-                    = Imgproc.contourArea(keyPointList.get(i))
-                    / Imgproc.arcLength(new MatOfPoint2f(keyPointList.get(i).toArray()), false);
-            if (Math.abs(straightness - 1) < straightThresh) {
-                keyPointList.remove(i);
-                i--;
-            }
-        }
+                    = Imgproc.contourArea(c)
+                    / Imgproc.arcLength(new MatOfPoint2f(c.toArray()), false);
+            return Math.abs(straightness - 1) < straightThresh;
+        });
     }
 }

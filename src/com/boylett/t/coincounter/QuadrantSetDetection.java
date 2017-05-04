@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import static org.opencv.core.CvType.CV_8UC1;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -93,6 +94,15 @@ public class QuadrantSetDetection {
      * @return Quadrant set
      */
     public QuadrantSet detect(Mat img) {
+        if (img.channels() != 1 && img.channels() != 3) {
+            throw new InvalidParameterException("Image must be greyscale or RGB");
+        }
+        if (img.dims() > 2 || img.rows() == 0 || img.cols() == 0) {
+            throw new InvalidParameterException("Image has invalid dimensions");
+        }
+        if (img.depth() != CvType.CV_8U) {
+            throw new InvalidParameterException("Image must have a bit depth of 8 and be unsigned");
+        }
         // Find half sets
         hsd.detectArcHalfSets(img);
         List<MatOfPoint> cntII_IV = hsd.getContoursII_IV();

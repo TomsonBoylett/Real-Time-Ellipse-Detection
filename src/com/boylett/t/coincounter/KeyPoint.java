@@ -13,9 +13,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 
 /**
- * A mat of points which can only store exactly 3 points.
- * 
- * This class also provides static methods for converting from a MatOfPoint
+ * Provides static methods for getting the key points of contours
  */
 public class KeyPoint {
     /**
@@ -27,9 +25,11 @@ public class KeyPoint {
      */
     public static List<MatOfPoint> createKeyPointList(List<MatOfPoint> contours) {
         List<MatOfPoint> keyPointsList = new ArrayList<>();
+        
         for (MatOfPoint contour : contours) {
             keyPointsList.add(fromMatOfPoint(contour));
         }
+        
         return keyPointsList;
     }
     
