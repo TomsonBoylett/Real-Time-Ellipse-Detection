@@ -20,7 +20,6 @@ import org.opencv.core.Size;
  * @author tomson
  */
 public class MatchArcs {
-    private static final int LENGTH = 3;
     private static final double CNC_THRESH = 0.35;
     
     private static double[][] p = new double[3][2];
@@ -44,7 +43,7 @@ public class MatchArcs {
     }
     
     public static double cnc(Point[] arc1, Point[] arc2) {
-        if (arc1.length != LENGTH || arc2.length != LENGTH) {
+        if (arc1.length != KeyPoint.LENGTH || arc2.length != KeyPoint.LENGTH) {
             throw new InvalidParameterException("Arcs must only be made up of 2 end points and a mid point");
         }
         setQ(arc1, arc2);
@@ -176,7 +175,7 @@ public class MatchArcs {
     }
     
     public static double calcMinDistance(Point[] arc1, Point[] arc2) {
-        if (arc1.length != LENGTH || arc2.length != LENGTH) {
+        if (arc1.length != KeyPoint.LENGTH || arc2.length != KeyPoint.LENGTH) {
             throw new InvalidParameterException("Arcs must only be made up of 2 end points and a mid point");
         }
         int[] closest = findClosestPointsBetweenArcs(arc1, arc2);

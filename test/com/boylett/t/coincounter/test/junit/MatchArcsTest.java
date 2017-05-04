@@ -134,6 +134,6 @@ public class MatchArcsTest {
     
     @Test
     public void test6() {
-        assertEquals(1.128, MatchArcs.cnc(arcs[5][0], arcs[5][1]), DELTA);
+        assertEquals(1.289, MatchArcs.cnc(arcs[5][0], arcs[5][1]), DELTA);
     }
 }

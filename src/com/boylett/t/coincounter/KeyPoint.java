@@ -16,6 +16,8 @@ import org.opencv.core.Point;
  * Provides static methods for getting the key points of contours
  */
 public class KeyPoint {
+    public static final int LENGTH = 3;
+    
     /**
      * Returns a list of contours where each contour only contains the first, last and
      * middle points of its corresponding original.
@@ -41,9 +43,9 @@ public class KeyPoint {
      * @return firstMidLastContour
      */
     public static MatOfPoint fromMatOfPoint(MatOfPoint contour) {
-        if (contour.rows() < 3) {
+        if (contour.rows() < LENGTH) {
             throw new InvalidParameterException(
-                    "Contour must have atleast 3 points.");
+                    "Contour must have atleast " + LENGTH + " points.");
         }
 
         Point start = new Point();

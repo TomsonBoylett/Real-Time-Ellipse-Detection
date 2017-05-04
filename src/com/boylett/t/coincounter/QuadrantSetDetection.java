@@ -57,8 +57,8 @@ public class QuadrantSetDetection {
         }
         
         public Builder setMinContLen(int minContLen) {
-            if (minContLen < 3) {
-                throw new InvalidParameterException("Minimum contour length must be atleast 3");
+            if (minContLen < KeyPoint.LENGTH) {
+                throw new InvalidParameterException("Minimum contour length must be atleast " + KeyPoint.LENGTH);
             }
             this.minContLen = minContLen;
             return this;
