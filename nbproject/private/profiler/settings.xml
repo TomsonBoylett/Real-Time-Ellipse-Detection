@@ -3,6 +3,6 @@
 <properties>
 <comment/>
 <entry key="ACTIVATED_FEATURES">#org.netbeans.modules.profiler.v2.features.MethodsFeature@</entry>
-<entry key="org.netbeans.modules.profiler.v2.features.MethodsFeature_SETTINGS_FLAG">true</entry>
 <entry key="org.netbeans.modules.profiler.v2.features.MethodsFeature_MODE_FLAG">AllClassesMode</entry>
+<entry key="org.netbeans.modules.profiler.v2.features.MethodsFeature_SETTINGS_FLAG">true</entry>
 </properties>

@@ -34,6 +34,8 @@ public class MatchArcs {
     private Line[] q;
     private double[][] a;
     private double[][] b;
+    private Mat m = new Mat(2, 1, CvType.CV_64FC1);
+    private Mat k = new Mat(2, 2, CvType.CV_64FC1);
     
     public MatchArcs() {
         threshold = CNC_THRESH;
@@ -143,22 +145,20 @@ public class MatchArcs {
     }
     
     private void calculateCoeff(int i, int j) {
-        Mat K = new Mat(2, 2, CvType.CV_64FC1);
-        K.put(0, 0, p[i].x);
-        K.put(0, 1, p[(i+1)%3].x);
-        K.put(1, 0, p[i].y);
-        K.put(1, 1, p[(i+1)%3].y);
+        k.put(0, 0, p[i].x);
+        k.put(0, 1, p[(i+1)%3].x);
+        k.put(1, 0, p[i].y);
+        k.put(1, 1, p[(i+1)%3].y);
         
-        Mat M = new Mat(2, 1, CvType.CV_64FC1);
-        M.put(0, 0, q[i].get(j).x);
-        M.put(1, 0, q[i].get(j).y);
+        m.put(0, 0, q[i].get(j).x);
+        m.put(1, 0, q[i].get(j).y);
         
-        Core.invert(K, K);
+        Core.invert(k, k);
         
-        Core.gemm(K, M, 1, new Mat(), 1, M);
+        Core.gemm(k, m, 1, new Mat(), 1, m);
         
-        a[i][j] = M.get(0, 0)[0];
-        b[i][j] = M.get(1, 0)[0];
+        a[i][j] = m.get(0, 0)[0];
+        b[i][j] = m.get(1, 0)[0];
     }
 
     /**
@@ -189,7 +189,7 @@ public class MatchArcs {
      * @param p2
      * @return Distance between points.
      */
-    private double distance(Point p1, Point p2) {
+    public double distance(Point p1, Point p2) {
         return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
     }
 }

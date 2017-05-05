@@ -4,6 +4,7 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -21,7 +22,7 @@ public class EllipseDetection {
     private static final double ELLIPSE_THRESH = 0.09;
     private static final int MIN_COUNT = 9;
     
-    List<MatOfPoint> arcComb;
+    List<MatOfPoint2f> arcComb;
     List<RotatedRect> ellipses;
     QuadrantSet qs;
     Mat img;
@@ -46,7 +47,7 @@ public class EllipseDetection {
         return qs;
     }
     
-    public List<MatOfPoint> getArcComb() {
+    public List<MatOfPoint2f> getArcComb() {
         return arcComb;
     }
     
@@ -62,11 +63,11 @@ public class EllipseDetection {
     
     public void fitEllipses() {
         ellipses = new ArrayList<>();
-        for (MatOfPoint mop : arcComb) {
-            RotatedRect ellipse = Imgproc.fitEllipse(new MatOfPoint2f(mop.toArray()));
-            double totalLength = Imgproc.arcLength(new MatOfPoint2f(Arrays.copyOfRange(mop.toArray(), 0, 3)), false) +
-                                 Imgproc.arcLength(new MatOfPoint2f(Arrays.copyOfRange(mop.toArray(), 3, 6)), false) +
-                                 Imgproc.arcLength(new MatOfPoint2f(Arrays.copyOfRange(mop.toArray(), 6, 9)), false);
+        for (MatOfPoint2f mop : arcComb) {
+            RotatedRect ellipse = Imgproc.fitEllipse(mop);
+            double totalLength = Imgproc.arcLength(new MatOfPoint2f(mop.submat(0, 3, 0, 1)), false) +
+                                 Imgproc.arcLength(new MatOfPoint2f(mop.submat(3, 6, 0, 1)), false) +
+                                 Imgproc.arcLength(new MatOfPoint2f(mop.submat(6, 9, 0, 1)), false);
             if (totalLength / ellipsePerimeter(ellipse) >= PERIMETER_RATIO_MIN &&
                     verifyEllipse(mop, ellipse)) {
                 ellipses.add(ellipse);
@@ -74,7 +75,7 @@ public class EllipseDetection {
         }
     }
     
-    public boolean verifyEllipse(MatOfPoint mop, RotatedRect ellipse) {
+    public boolean verifyEllipse(MatOfPoint2f mop, RotatedRect ellipse) {
         Point[] points = mop.toArray();
         double count = 0;
         for (Point p : points) {
@@ -167,7 +168,9 @@ public class EllipseDetection {
                     arcs3.get(i3).get(0, 0, buffer);
                     pointSet.put(arcs1.get(i1).rows() + arcs2.get(i2).rows(), 0, buffer);
                     
-                    arcComb.add(pointSet);
+                    MatOfPoint2f dst = new MatOfPoint2f();
+                    pointSet.convertTo(dst, CvType.CV_32F);
+                    arcComb.add(dst);
                 }
             }
         }
