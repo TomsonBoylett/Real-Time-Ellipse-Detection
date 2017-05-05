@@ -16,7 +16,6 @@ import org.opencv.imgproc.Imgproc;
  * @author tomson
  */
 public class EllipseDetection {
-    private static final double MAX_DISTANCE_FACTOR = 2.0;
     private static final double LIMIT = 0.1;
     private static final double PERIMETER_RATIO_MIN = 0.2;
     private static final double ELLIPSE_THRESH = 0.09;
@@ -26,6 +25,7 @@ public class EllipseDetection {
     List<RotatedRect> ellipses;
     QuadrantSet qs;
     Mat img;
+    MatchArcs ma = new MatchArcs();
 
     public EllipseDetection() {
         arcComb = new ArrayList<>();
@@ -145,7 +145,7 @@ public class EllipseDetection {
         for (int i2 = 0; i2 < arcs2.size(); i2++) {
             for (int i1 = 0; i1 < arcs1.size(); i1++) {
                 if (!meetsCoordCon(arcs1.get(i1), arcs2.get(i2), i) ||
-                    !MatchArcs.isMatch(arcs1.get(i1), arcs2.get(i2))) {
+                    !ma.isMatch(arcs1.get(i1), arcs2.get(i2))) {
                     continue;
                 }
                 for (int i3 = 0; i3 < arcs3.size(); i3++) {

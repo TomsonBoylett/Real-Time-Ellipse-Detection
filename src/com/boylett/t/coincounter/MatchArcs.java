@@ -20,10 +20,13 @@ import org.opencv.core.Size;
  * Decides if two arcs come from the same ellipse or not.
  * Arcs must only be made up of 2 end points and a mid point.
  * 
+ * Related:
+ * http://i.imgur.com/7rf0Vrp.png
+ * 
  * @author tomson
  */
 public class MatchArcs {
-    private static final double CNC_THRESH = 0.35;
+    private static final double CNC_THRESH = 0.5;
     private static final double NO_MATCH = 1.1 + CNC_THRESH;
     
     private double threshold;
@@ -36,6 +39,10 @@ public class MatchArcs {
         threshold = CNC_THRESH;
     }
     
+    /**
+     * 
+     * @param threshold 
+     */
     public MatchArcs(double threshold) {
         if (threshold < 0) {
             throw new InvalidParameterException("Threshold must be positive!");
@@ -51,7 +58,23 @@ public class MatchArcs {
      * @return True if both arcs come from the same ellipse
      */
     public boolean isMatch(Point[] arc1, Point[] arc2) {
-        return Math.abs(1 - cnc(arc1, arc2)) < threshold;
+        double cnc = cnc(arc1, arc2);
+        
+        /* 
+        Let X be one possible cnc value of 2 arcs.
+        
+        Depending on the ordering of the arc inputs you can get the value X
+        or 1/X.
+        
+        This means that as the threshold value gets larger the results
+        become more and more inconsistent.
+        
+        This if statement helps resolve this issue.
+        */
+        if (cnc > 1.0) {
+            cnc = 1.0 / cnc;
+        }
+        return Math.abs(1 - cnc) < threshold;
     }
     
     public boolean isMatch(MatOfPoint arc1, MatOfPoint arc2) {
@@ -60,7 +83,7 @@ public class MatchArcs {
     
     public double cnc(Point[] arc1, Point[] arc2) {
         if (arc1.length != KeyPoint.LENGTH || arc2.length != KeyPoint.LENGTH) {
-            throw new InvalidParameterException("Arcs must only be made up of 2 end points and a mid point");
+            throw new InvalidParameterException("Arcs must contain exactly 3 points");
         }
         
         calcQ(arc1, arc2);
@@ -138,6 +161,11 @@ public class MatchArcs {
         b[i][j] = M.get(1, 0)[0];
     }
 
+    /**
+     * @param arc1
+     * @param arc2
+     * @return 
+     */
     private int[] findClosestPointsBetweenArcs(Point[] arc1, Point[] arc2) {
         double minDist = Double.MAX_VALUE;
         int[] minIndex = {-1, -1};
@@ -156,6 +184,11 @@ public class MatchArcs {
         return minIndex;
     }
 
+    /**
+     * @param p1
+     * @param p2
+     * @return Distance between points.
+     */
     private double distance(Point p1, Point p2) {
         return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
     }

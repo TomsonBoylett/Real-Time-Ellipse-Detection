@@ -9,15 +9,9 @@ import com.atul.JavaOpenCV.ImShow;
 import com.boylett.t.coincounter.EllipseDetection;
 import com.boylett.t.coincounter.QuadrantSet;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -30,7 +24,7 @@ import org.opencv.imgproc.Imgproc;
 public class TempTest2 {
     public static void main(String[] args) throws IOException {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        Mat m = Imgcodecs.imread("/home/tomson/Documents/CoinCounting/test3.jpg");
+        Mat m = Imgcodecs.imread("/home/tomson/Documents/CoinCounting/test6.jpg");
         EllipseDetection ed = new EllipseDetection();
         QuadrantSet qs = ed.findQuadrantSet(m);
         
