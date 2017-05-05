@@ -8,6 +8,7 @@ package com.boylett.t.coincounter.test;
 import com.atul.JavaOpenCV.ImShow;
 import com.boylett.t.coincounter.EllipseDetection;
 import com.boylett.t.coincounter.QuadrantSet;
+import com.boylett.t.coincounter.QuadrantSetDetection;
 import java.io.IOException;
 import java.util.List;
 import org.opencv.core.Core;
@@ -36,7 +37,6 @@ public class TempTest2 {
         ed.pickArcs();
         ed.fitEllipses();
         ed.removeDuplicates();
-        
         List<RotatedRect> es = ed.getEllipses();
         for (RotatedRect e : es) {
             Imgproc.ellipse(m, e, new Scalar(255, 0, 0), 2);
