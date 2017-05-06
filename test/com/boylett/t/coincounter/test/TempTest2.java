@@ -7,6 +7,9 @@ package com.boylett.t.coincounter.test;
 
 import com.atul.JavaOpenCV.ImShow;
 import com.boylett.t.coincounter.EllipseDetection;
+import com.boylett.t.coincounter.EllipseVerify;
+import com.boylett.t.coincounter.HalfSetDetection;
+import com.boylett.t.coincounter.MatchArcs;
 import com.boylett.t.coincounter.QuadrantSet;
 import com.boylett.t.coincounter.QuadrantSetDetection;
 import java.io.IOException;
@@ -15,6 +18,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 

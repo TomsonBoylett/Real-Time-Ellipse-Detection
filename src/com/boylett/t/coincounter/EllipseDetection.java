@@ -75,6 +75,15 @@ public class EllipseDetection {
     }
     
     public List<RotatedRect> detect(Mat img) {
+        if (img.channels() != 1 && img.channels() != 3) {
+            throw new InvalidParameterException("Image must be greyscale or RGB");
+        }
+        if (img.dims() > 2 || img.rows() == 0 || img.cols() == 0) {
+            throw new InvalidParameterException("Image has invalid dimensions");
+        }
+        if (img.depth() != CvType.CV_8U) {
+            throw new InvalidParameterException("Image must have a bit depth of 8 and be unsigned");
+        }
         QuadrantSet qs = findCandidateArcs(img);
         List<MatOfPoint2f> arcComb = new ArcPicking(ma).pickArcs(qs);
         List<RotatedRect> ellipses = fitEllipses(arcComb);
@@ -90,11 +99,11 @@ public class EllipseDetection {
      * @param img image
      * @return 4 quadrant sets
      */
-    public QuadrantSet findCandidateArcs(Mat img) {
+    private QuadrantSet findCandidateArcs(Mat img) {
         return new QuadrantSetDetection.Builder().build().detect(img);
     }
     
-    public List<RotatedRect> fitEllipses(List<MatOfPoint2f> arcComb) {
+    private List<RotatedRect> fitEllipses(List<MatOfPoint2f> arcComb) {
         List<RotatedRect> ellipses = new ArrayList<>();
         for (MatOfPoint2f mop : arcComb) {
             RotatedRect ellipse = Imgproc.fitEllipse(mop);
@@ -105,7 +114,7 @@ public class EllipseDetection {
         return ellipses;
     }
     
-    public void removeDuplicates(List<RotatedRect> ellipses, Size imgSize) {
+    private void removeDuplicates(List<RotatedRect> ellipses, Size imgSize) {
         for (int i = 0; i < ellipses.size() - 1; i++) {
             for (int j = i + 1; j < ellipses.size(); j++) {
                 RotatedRect a = ellipses.get(i);
@@ -118,7 +127,7 @@ public class EllipseDetection {
         }
     }
     
-    public boolean areSimilar(RotatedRect rect1, RotatedRect rect2, Size imgSize) {
+    private boolean areSimilar(RotatedRect rect1, RotatedRect rect2, Size imgSize) {
         double Dx = Math.abs(rect1.center.x - rect2.center.x)/imgSize.width;
         double Dy = Math.abs(rect1.center.y - rect2.center.y)/imgSize.height;
         
