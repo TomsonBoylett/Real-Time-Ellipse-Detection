@@ -95,17 +95,20 @@ public class EllipseVerify {
         return count == minCount;
     }
     
-    private boolean pointOnEllipse(Point p, RotatedRect e) {
+    public static double dispFromEllipse(Point p, RotatedRect e) {
         double h = e.center.x;
         double k = e.center.y;
         double A = (e.angle * Math.PI) / 180.0;
         double a = e.size.width / 2.0;
         double b = e.size.height / 2.0;
         
-        double c = (Math.pow((p.x - h) * Math.cos(A) + (p.y - k) * Math.sin(A), 2.0) / Math.pow(a, 2.0)) +
-                   (Math.pow((p.x - h) * Math.sin(A) - (p.y - k) * Math.cos(A), 2.0) / Math.pow(b, 2.0));
+        return (Math.pow((p.x - h) * Math.cos(A) + (p.y - k) * Math.sin(A), 2.0) / Math.pow(a, 2.0)) +
+               (Math.pow((p.x - h) * Math.sin(A) - (p.y - k) * Math.cos(A), 2.0) / Math.pow(b, 2.0));
         
-        return Math.abs(c - 1) < ellipseThresh;
+    }
+    
+    private boolean pointOnEllipse(Point p, RotatedRect e) {
+        return Math.abs(dispFromEllipse(p, e) - 1) < ellipseThresh;
     }
     
     private boolean stableEllipse(MatOfPoint2f mop, RotatedRect ellipse) {

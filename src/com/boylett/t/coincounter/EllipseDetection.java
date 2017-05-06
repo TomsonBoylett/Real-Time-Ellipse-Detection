@@ -117,12 +117,26 @@ public class EllipseDetection {
     private void removeDuplicates(List<RotatedRect> ellipses, Size imgSize) {
         for (int i = 0; i < ellipses.size() - 1; i++) {
             for (int j = i + 1; j < ellipses.size(); j++) {
+                System.out.println(ellipses.size());
                 RotatedRect a = ellipses.get(i);
                 RotatedRect b = ellipses.get(j);
+                
                 if (areSimilar(a, b, imgSize)) {
                     ellipses.remove(j);
                     j--;
+                    continue;
                 }
+                
+                RotatedRect rr = combine(a, b);
+                if (rr != null) {
+                    ellipses.remove(j);
+                    ellipses.remove(i);
+                    ellipses.add(rr);
+                    
+                    i--;
+                    break;
+                }
+                
             }
         }
     }
@@ -146,5 +160,19 @@ public class EllipseDetection {
                     Math.abs((double) (rect1.angle - rect2.angle)) / Math.PI;
         
         return Dx < limit && Dy < limit && Da < limit && Db < limit && Dt < limit;
+    }
+    
+    private RotatedRect combine(RotatedRect rect1, RotatedRect rect2) {
+        if (EllipseVerify.dispFromEllipse(rect1.center, rect2) < 1 ||
+                EllipseVerify.dispFromEllipse(rect2.center, rect1) < 1) {
+            double x = (rect1.center.x + rect2.center.x) / 2.0;
+            double y = (rect1.center.y + rect2.center.y) / 2.0;
+            double width = (rect1.size.width + rect2.size.width) / 2.0;
+            double height = (rect1.size.height + rect2.size.height) / 2.0;
+            double angle = (rect1.angle + rect2.angle) / 2.0;
+            return new RotatedRect(new Point(x, y), new Size(width, height), angle);
+        }
+        
+        return null;
     }
 }
