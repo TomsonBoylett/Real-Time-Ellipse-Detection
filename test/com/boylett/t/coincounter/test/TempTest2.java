@@ -25,7 +25,7 @@ import org.opencv.imgproc.Imgproc;
 public class TempTest2 {
     public static void main(String[] args) throws IOException {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        Mat m = Imgcodecs.imread("/home/tomson/Documents/CoinCounting/test3.jpg");
+        Mat m = Imgcodecs.imread("/home/tomson/Documents/CoinCounting/test8.jpg");
         EllipseDetection ed = new EllipseDetection.Builder().build();
         List<RotatedRect> es = ed.detect(m);
         for (RotatedRect e : es) {

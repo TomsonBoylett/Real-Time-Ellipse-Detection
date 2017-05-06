@@ -5,6 +5,7 @@
  */
 package com.boylett.t.coincounter;
 
+import java.security.InvalidParameterException;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
@@ -15,6 +16,8 @@ import org.opencv.imgproc.Imgproc;
  * @author tomson
  */
 public class EllipseVerify {
+    private static final int POINTS = KeyPoint.LENGTH * MatchArcs.ARCS_PER_SET;
+    
     private int minCount;
     private double perimeterRatioMin;
     private double ellipseThresh;
@@ -45,16 +48,26 @@ public class EllipseVerify {
         }
         
         public Builder setMinCount(int minCount) {
+            // Each candidate arc has 3 points and each candidate set has 3 arcs
+            if (minCount < 0 || minCount > POINTS) {
+                throw new InvalidParameterException("minCount must be between 0 and " + POINTS + " inclusive");
+            }
             this.minCount = minCount;
             return this;
         }
         
         public Builder setPerimeterRatioMin(double perimeterRatioMin) {
+            if (perimeterRatioMin < 0.0 || perimeterRatioMin > 1.0) {
+                throw new InvalidParameterException("Perimeter ratio must be between 0 and 1 inclusive");
+            }
             this.perimeterRatioMin = perimeterRatioMin;
             return this;
         }
         
         public Builder setEllipseThresh(double ellipseThresh) {
+            if (ellipseThresh < 0.0) {
+                throw new InvalidParameterException("Ellipse threshold must be positive");
+            }
             this.ellipseThresh = ellipseThresh;
             return this;
         }
@@ -65,6 +78,9 @@ public class EllipseVerify {
     }
     
     public boolean verify(MatOfPoint2f mop, RotatedRect e) {
+        if (mop.rows() != POINTS) {
+            throw new InvalidParameterException("Must be 9 points in candidate set");
+        }
         return ellipseMatchesPoints(mop, e) && stableEllipse(mop, e);
     }
     

@@ -26,14 +26,15 @@ import org.opencv.core.Size;
  * @author tomson
  */
 public class MatchArcs {
+    public static final int ARCS_PER_SET = 3;
     private static final double CNC_THRESH = 0.5;
-    private static final double NO_MATCH = 1.1 + CNC_THRESH; // Value returned when 2 of the lines a parallel
+    private static final double NO_MATCH = -10.0; // Value returned when 2 of the lines a parallel
     
     private double threshold; // How close to 1 does the cnc value need to be?
     private Point[] p; // Points where the lines in q intersect
     private Line[] q; // Lines formed from 2 arcs
-    private double[][] a; // Coefficient used to calculate cnc
-    private double[][] b; // Coefficient used to calculate cnc
+    private double[][] a; // Coefficients used to calculate cnc
+    private double[][] b; // Coefficients used to calculate cnc
     private Mat m = new Mat(2, 1, CvType.CV_64FC1); // Used to solve simultaneous equation
     private Mat k = new Mat(2, 2, CvType.CV_64FC1); // Used to solve simultaneous equation
     

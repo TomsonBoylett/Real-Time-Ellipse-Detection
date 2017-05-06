@@ -18,19 +18,22 @@ import org.opencv.imgproc.Imgproc;
  * @author tomson
  */
 public class EllipseDetection {
+    private QuadrantSetDetection qsd;
     private EllipseVerify ev;
     private MatchArcs ma;
     private double limit;
 
-    private EllipseDetection(EllipseVerify ev, MatchArcs ma, double limit) {
+    private EllipseDetection(EllipseVerify ev, MatchArcs ma, double limit, QuadrantSetDetection qsd) {
         this.ev = ev;
         this.ma = ma;
         this.limit = limit;
+        this.qsd = qsd;
     }
     
     public static class Builder {
         private static final double LIMIT = 0.1;
         
+        private QuadrantSetDetection qsd;
         private EllipseVerify ev;
         private MatchArcs ma;
         private double limit;
@@ -40,9 +43,15 @@ public class EllipseDetection {
         }
         
         public final void setToDefault() {
+            this.qsd = new QuadrantSetDetection.Builder().build();
             this.ev = new EllipseVerify.Builder().build();
             this.ma = new MatchArcs();
             this.limit = LIMIT;
+        }
+        
+        public Builder setQuadrantSetDetection(QuadrantSetDetection qsd) {
+            this.qsd = qsd;
+            return this;
         }
 
         public Builder setEllipseVerify(EllipseVerify ev) {
@@ -61,7 +70,7 @@ public class EllipseDetection {
         }
         
         public EllipseDetection build() {
-            return new EllipseDetection(ev, ma, limit);
+            return new EllipseDetection(ev, ma, limit, qsd);
         }
     }
     
