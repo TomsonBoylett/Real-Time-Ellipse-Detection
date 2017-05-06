@@ -16,7 +16,10 @@
             <file>file:/home/tomson/Documents/CoinCounting/ccjava/src/com/boylett/t/coincounter/HalfSetDetection.java</file>
             <file>file:/home/tomson/Documents/CoinCounting/ccjava/test/com/boylett/t/coincounter/test/TempTest.java</file>
             <file>file:/home/tomson/Documents/CoinCounting/ccjava/src/com/boylett/t/coincounter/EllipseDetection.java</file>
+            <file>file:/home/tomson/Documents/CoinCounting/ccjava/src/com/boylett/t/coincounter/ArcPicking.java</file>
+            <file>file:/home/tomson/Documents/CoinCounting/ccjava/src/com/boylett/t/coincounter/EllipseVerify.java</file>
             <file>file:/home/tomson/Documents/CoinCounting/ccjava/src/com/boylett/t/coincounter/MatchArcs.java</file>
+            <file>file:/home/tomson/Documents/CoinCounting/ccjava/test/com/boylett/t/coincounter/test/junit/MatchArcsTest.java</file>
         </group>
     </open-files>
 </project-private>

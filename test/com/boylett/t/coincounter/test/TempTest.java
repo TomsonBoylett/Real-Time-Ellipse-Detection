@@ -17,22 +17,9 @@ public class TempTest {
     public static class EDGaussianBlur implements WebcamDriver.Process {
         @Override
         public Mat process(Mat m) {
-            EllipseDetection ed = new EllipseDetection();
+            EllipseDetection ed = new EllipseDetection.Builder().build();
             
-            QuadrantSet qs = ed.findQuadrantSet(m);
-            
-            ed.pickArcs();
-            
-            ed.fitEllipses();
-            
-            ed.removeDuplicates();
-            
-            Imgproc.polylines(m, qs.getArcI(), false, new Scalar(0,255,0));
-            Imgproc.polylines(m, qs.getArcII(), false, new Scalar(0,255,0));
-            Imgproc.polylines(m, qs.getArcIII(), false, new Scalar(0,255,0));
-            Imgproc.polylines(m, qs.getArcIV(), false, new Scalar(0,255,0));
-            
-            List<RotatedRect> es = ed.getEllipses();
+            List<RotatedRect> es = ed.detect(m);
             for (RotatedRect e : es) {
                 Imgproc.ellipse(m, e, new Scalar(255, 0, 0), 2);
             }

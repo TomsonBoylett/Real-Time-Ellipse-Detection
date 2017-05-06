@@ -10,6 +10,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 /**
@@ -17,19 +18,59 @@ import org.opencv.imgproc.Imgproc;
  * @author tomson
  */
 public class EllipseDetection {
-    private static final double LIMIT = 0.1;
-    private static final double PERIMETER_RATIO_MIN = 0.2;
-    private static final double ELLIPSE_THRESH = 0.09;
-    private static final int MIN_COUNT = 9;
-    
-    List<MatOfPoint2f> arcComb;
-    List<RotatedRect> ellipses;
-    QuadrantSet qs;
-    Mat img;
-    MatchArcs ma = new MatchArcs();
+    private EllipseVerify ev;
+    private MatchArcs ma;
+    private double limit;
 
-    public EllipseDetection() {
-        arcComb = new ArrayList<>();
+    private EllipseDetection(EllipseVerify ev, MatchArcs ma, double limit) {
+        this.ev = ev;
+        this.ma = ma;
+        this.limit = limit;
+    }
+    
+    public static class Builder {
+        private static final double LIMIT = 0.1;
+        
+        private EllipseVerify ev;
+        private MatchArcs ma;
+        private double limit;
+        
+        public Builder() {
+            setToDefault();
+        }
+        
+        public final void setToDefault() {
+            this.ev = new EllipseVerify.Builder().build();
+            this.ma = new MatchArcs();
+            this.limit = LIMIT;
+        }
+
+        public Builder setEllipseVerify(EllipseVerify ev) {
+            this.ev = ev;
+            return this;
+        }
+
+        public Builder setMatchArcs(MatchArcs ma) {
+            this.ma = ma;
+            return this;
+        }
+
+        public Builder setLimit(double limit) {
+            this.limit = limit;
+            return this;
+        }
+        
+        public EllipseDetection build() {
+            return new EllipseDetection(ev, ma, limit);
+        }
+    }
+    
+    public List<RotatedRect> detect(Mat img) {
+        QuadrantSet qs = findCandidateArcs(img);
+        List<MatOfPoint2f> arcComb = new ArcPicking(ma).pickArcs(qs);
+        List<RotatedRect> ellipses = fitEllipses(arcComb);
+        removeDuplicates(ellipses, img.size());
+        return ellipses;
     }
 
     /**
@@ -40,69 +81,27 @@ public class EllipseDetection {
      * @param img image
      * @return 4 quadrant sets
      */
-    public QuadrantSet findQuadrantSet(Mat img) {
-        this.img = img;
-        QuadrantSetDetection qsd = new QuadrantSetDetection.Builder().build();
-        qs = qsd.detect(img);
-        return qs;
+    public QuadrantSet findCandidateArcs(Mat img) {
+        return new QuadrantSetDetection.Builder().build().detect(img);
     }
     
-    public List<MatOfPoint2f> getArcComb() {
-        return arcComb;
-    }
-    
-    public List<RotatedRect> getEllipses() {
-        return ellipses;
-    }
-    
-    public void pickArcs() {
-        for (int i = 0; i < 4; i++) {
-            arcPicking(i);
-        }
-    }
-    
-    public void fitEllipses() {
-        ellipses = new ArrayList<>();
+    public List<RotatedRect> fitEllipses(List<MatOfPoint2f> arcComb) {
+        List<RotatedRect> ellipses = new ArrayList<>();
         for (MatOfPoint2f mop : arcComb) {
             RotatedRect ellipse = Imgproc.fitEllipse(mop);
-            double totalLength = Imgproc.arcLength(new MatOfPoint2f(mop.submat(0, 3, 0, 1)), false) +
-                                 Imgproc.arcLength(new MatOfPoint2f(mop.submat(3, 6, 0, 1)), false) +
-                                 Imgproc.arcLength(new MatOfPoint2f(mop.submat(6, 9, 0, 1)), false);
-            if (totalLength / ellipsePerimeter(ellipse) >= PERIMETER_RATIO_MIN &&
-                    verifyEllipse(mop, ellipse)) {
+            if (ev.verify(mop, ellipse)) {
                 ellipses.add(ellipse);
             }
         }
+        return ellipses;
     }
     
-    public boolean verifyEllipse(MatOfPoint2f mop, RotatedRect ellipse) {
-        Point[] points = mop.toArray();
-        double count = 0;
-        for (Point p : points) {
-            if (Math.abs(thing(p, ellipse) - 1) < ELLIPSE_THRESH) {
-                count++;
-            }
-        }
-        return count == MIN_COUNT;
-    }
-    
-    public double thing(Point p, RotatedRect e) {
-        double h = e.center.x;
-        double k = e.center.y;
-        double A = (e.angle * Math.PI) / 180.0;
-        double a = e.size.width / 2.0;
-        double b = e.size.height / 2.0;
-        
-        return (Math.pow((p.x - h) * Math.cos(A) + (p.y - k) * Math.sin(A), 2.0) / Math.pow(a, 2.0)) +
-               (Math.pow((p.x - h) * Math.sin(A) - (p.y - k) * Math.cos(A), 2.0) / Math.pow(b, 2.0));
-    }
-    
-    public void removeDuplicates() {
+    public void removeDuplicates(List<RotatedRect> ellipses, Size imgSize) {
         for (int i = 0; i < ellipses.size() - 1; i++) {
             for (int j = i + 1; j < ellipses.size(); j++) {
                 RotatedRect a = ellipses.get(i);
                 RotatedRect b = ellipses.get(j);
-                if (areSimilar(a, b)) {
+                if (areSimilar(a, b, imgSize)) {
                     ellipses.remove(j);
                     j--;
                 }
@@ -110,16 +109,9 @@ public class EllipseDetection {
         }
     }
     
-    public double ellipsePerimeter(RotatedRect e) {
-        return 2.0 * Math.PI * Math.sqrt(
-                                (Math.pow(e.size.width, 2.0) + Math.pow(e.size.height, 2.0))
-                                / 2.0
-        );
-    }
-    
-    public boolean areSimilar(RotatedRect rect1, RotatedRect rect2) {
-        double Dx = Math.abs(rect1.center.x - rect2.center.x)/img.width();
-        double Dy = Math.abs(rect1.center.y - rect2.center.y)/img.height();
+    public boolean areSimilar(RotatedRect rect1, RotatedRect rect2, Size imgSize) {
+        double Dx = Math.abs(rect1.center.x - rect2.center.x)/imgSize.width;
+        double Dy = Math.abs(rect1.center.y - rect2.center.y)/imgSize.height;
         
         double a1 = rect1.size.width;
         double a2 = rect2.size.width;
@@ -135,89 +127,6 @@ public class EllipseDetection {
                     (b1/a1 <  0.9 && b2/a2 >= 0.9) ? 1.0 :
                     Math.abs((double) (rect1.angle - rect2.angle)) / Math.PI;
         
-        return Dx < LIMIT && Dy < LIMIT && Da < LIMIT && Db < LIMIT && Dt < LIMIT;
-    }
-    
-    public void arcPicking(int i) {
-        List<MatOfPoint> arcs1 = qs.get(i);
-        List<MatOfPoint> arcs2 = qs.get(Math.floorMod(i - 1, 4));
-        List<MatOfPoint> arcs3 = qs.get(Math.floorMod(i - 2, 4));
-        
-        for (int i2 = 0; i2 < arcs2.size(); i2++) {
-            for (int i1 = 0; i1 < arcs1.size(); i1++) {
-                if (!meetsCoordCon(arcs1.get(i1), arcs2.get(i2), i) ||
-                    !ma.isMatch(arcs1.get(i1), arcs2.get(i2))) {
-                    continue;
-                }
-                for (int i3 = 0; i3 < arcs3.size(); i3++) {
-                    if (!meetsCoordCon(arcs2.get(i2), arcs3.get(i3), Math.floorMod(i - 1, 4))) {
-                        continue;
-                    }
-                    MatOfPoint pointSet = new MatOfPoint();
-                    pointSet.alloc(arcs1.get(i1).rows() + arcs2.get(i2).rows() + arcs3.get(i3).rows());
-                    
-                    int[] buffer = new int[2 * arcs1.get(i1).rows()];
-                    arcs1.get(i1).get(0, 0, buffer);
-                    pointSet.put(0, 0, buffer);
-                    
-                    buffer = new int[2 * arcs2.get(i2).rows()];
-                    arcs2.get(i2).get(0, 0, buffer);
-                    pointSet.put(arcs1.get(i1).rows(), 0, buffer);
-                    
-                    buffer = new int[2 * arcs3.get(i3).rows()];
-                    arcs3.get(i3).get(0, 0, buffer);
-                    pointSet.put(arcs1.get(i1).rows() + arcs2.get(i2).rows(), 0, buffer);
-                    
-                    MatOfPoint2f dst = new MatOfPoint2f();
-                    pointSet.convertTo(dst, CvType.CV_32F);
-                    arcComb.add(dst);
-                }
-            }
-        }
-    }
-    
-    /**
-     * 
-     * @param arc1
-     * @param arc2 must be in the quadrant 90 degrees clockwise from arc1
-     * @param inc the quadrant arc1 is in where 0 is top right going clockwise
-     * @return 
-     */
-    private boolean meetsCoordCon(MatOfPoint arc1, MatOfPoint arc2, int inc) {
-        if (inc < 0 || inc > 3) {
-            throw new InvalidParameterException("inc must be between 0 and 3");
-        }
-        
-        switch(inc) {
-            case 0:
-                return maxY(arc1) < minY(arc2);
-                
-            case 3:
-                return minX(arc1) > maxX(arc2);
-                
-            case 2:
-                return minY(arc1) > maxY(arc2);
-                
-            case 1:
-                return maxX(arc1) < minX(arc2);
-        }
-        
-        throw new RuntimeException("This should never be executed");
-    }
-    
-    private double minX(MatOfPoint arc) {
-        return arc.get(0, 0)[0] < arc.get(2, 0)[0] ? arc.get(0, 0)[0] : arc.get(2, 0)[0];
-    }
-    
-    private double maxX(MatOfPoint arc) {
-        return arc.get(0, 0)[0] > arc.get(2, 0)[0] ? arc.get(0, 0)[0] : arc.get(2, 0)[0];
-    }
-    
-    private double minY(MatOfPoint arc) {
-        return arc.get(0, 0)[1] < arc.get(2, 0)[1] ? arc.get(0, 0)[1] : arc.get(2, 0)[1];
-    }
-    
-    private double maxY(MatOfPoint arc) {
-        return arc.get(0, 0)[1] > arc.get(2, 0)[1] ? arc.get(0, 0)[1] : arc.get(2, 0)[1];
+        return Dx < limit && Dy < limit && Da < limit && Db < limit && Dt < limit;
     }
 }
