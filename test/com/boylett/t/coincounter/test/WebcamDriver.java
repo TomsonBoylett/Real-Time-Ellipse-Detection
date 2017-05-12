@@ -52,7 +52,7 @@ public class WebcamDriver {
      */
     public void start() {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        Webcam webcam = Webcam.getWebcams().get(1);
+        Webcam webcam = Webcam.getWebcams().get(0);
         webcam.setViewSize(new Dimension(640, 480));
         webcam.open();
         ImShow im = new ImShow("WebcamMain");

@@ -92,7 +92,7 @@ public class EllipseVerify {
                 count++;
             }
         }
-        return count == minCount;
+        return count >= minCount;
     }
     
     public static double dispFromEllipse(Point p, RotatedRect e) {

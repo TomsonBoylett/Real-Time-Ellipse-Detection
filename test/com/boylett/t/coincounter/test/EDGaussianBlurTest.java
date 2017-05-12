@@ -4,21 +4,23 @@
 package com.boylett.t.coincounter.test;
 
 import com.boylett.t.coincounter.EllipseDetection;
+import com.boylett.t.coincounter.HalfSetDetection;
 import java.lang.reflect.Method;
 import org.opencv.core.Mat;
+import org.opencv.core.Size;
 
 public class EDGaussianBlurTest {
     
     public static class EDGaussianBlur implements WebcamDriver.Process {
         @Override
         public Mat process(Mat m) {
-            EllipseDetection ed = new EllipseDetection();
+            HalfSetDetection hsd = new HalfSetDetection.Builder().build();
             
             try {
                 Method removeNoise = null;
-                removeNoise = ed.getClass().getDeclaredMethod("removeNoise", Mat.class);
+                removeNoise = hsd.getClass().getDeclaredMethod("removeNoise", Mat.class, Size.class);
                 removeNoise.setAccessible(true);
-                m = (Mat) removeNoise.invoke(ed, m);
+                m = (Mat) removeNoise.invoke(hsd, m, new Size());
             }
             catch (Exception e) {
                 e.printStackTrace();

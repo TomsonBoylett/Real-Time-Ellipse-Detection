@@ -43,8 +43,8 @@ public class HalfSetDetection {
     
     public static class Builder {
         private static final Size KSIZE = new Size(5, 5); // For gaussian blur
-        private static final int CANNY_LOWER_THRESH = 50;
-        private static final int CANNY_UPPER_THRESH = 150;
+        private static final int CANNY_LOWER_THRESH = 100;
+        private static final int CANNY_UPPER_THRESH = 200;
     
         private Size ksize;
         private int cannyLower;
@@ -125,13 +125,13 @@ public class HalfSetDetection {
             throw new InvalidParameterException("Image must have a bit depth of 8 and be unsigned");
         }
         
+        // Convert image to greyscale (if needed)
+        if (img.channels() == 3) {
+            Imgproc.cvtColor(img, img, Imgproc.COLOR_RGB2GRAY);
+        }
+        
         // Remove noise
         Mat img2 = removeNoise(img, ksize);
-        
-        // Convert image to greyscale (if needed)
-        if (img2.channels() == 3) {
-            Imgproc.cvtColor(img2, img2, Imgproc.COLOR_RGB2GRAY);
-        }
 
         // Create image mask that corresponds to pixels with a
         // positive sobel derivative gradient
@@ -178,8 +178,8 @@ public class HalfSetDetection {
      * @return less noisy img
      */
     private Mat removeNoise(Mat img, Size ksize) {
-        Mat noNoise = new Mat();
-        Imgproc.GaussianBlur(img, noNoise, ksize, 0, 0);
+        Mat noNoise = new Mat(img.size(), CvType.CV_8UC3);
+        Imgproc.GaussianBlur(img, noNoise, ksize, 0.0);
         return noNoise;
     }
     

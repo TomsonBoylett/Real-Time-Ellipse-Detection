@@ -17,14 +17,16 @@ public class TempTest {
     public static class EDGaussianBlur implements WebcamDriver.Process {
         @Override
         public Mat process(Mat m) {
+            Mat copy = new Mat();
+            m.copyTo(copy);
             EllipseDetection ed = new EllipseDetection.Builder().build();
             
             List<RotatedRect> es = ed.detect(m);
             for (RotatedRect e : es) {
-                Imgproc.ellipse(m, e, new Scalar(255, 0, 0), 2);
+                Imgproc.ellipse(copy, e, new Scalar(255, 0, 0), 2);
             }
             
-            return m;
+            return copy;
         }
     }
     

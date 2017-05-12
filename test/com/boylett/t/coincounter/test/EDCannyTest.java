@@ -16,12 +16,14 @@ public class EDCannyTest {
     public static class EDCanny implements WebcamDriver.Process {
         @Override
         public Mat process(Mat m) {
-            HalfSetDetection hsd = new HalfSetDetection();
+            Mat copy = new Mat();
+            m.copyTo(copy);
+            HalfSetDetection hsd = new HalfSetDetection.Builder().build();
             hsd.detectArcHalfSets(m);
             
-            Imgproc.polylines(m, hsd.getContoursII_IV(), false, new Scalar(0,255,0));
-            Imgproc.polylines(m, hsd.getContoursI_III(), false, new Scalar(255,0,0));
-            return m;
+            Imgproc.polylines(copy, hsd.getContoursII_IV(), false, new Scalar(0,255,0));
+            Imgproc.polylines(copy, hsd.getContoursI_III(), false, new Scalar(255,0,0));
+            return copy;
         }
     }
     
