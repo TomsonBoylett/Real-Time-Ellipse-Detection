@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="lib/webcam-capture/examples"/>
+	<classpathentry kind="src" path="lib/webcam-capture/src"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="lib" path="lib/Imshow.jar"/>
+	<classpathentry kind="lib" path="lib/webcam-capture/libs/bridj-0.6.2.jar"/>
+	<classpathentry kind="lib" path="lib/webcam-capture/libs/slf4j-api-1.7.22.jar"/>
+	<classpathentry kind="lib" path="lib/webcam-capture/libs/slf4j-simple-1.7.22.jar"/>
+	<classpathentry kind="lib" path="lib/webcam-capture/webcam-capture-0.3.10.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenCV 2.4"/>
+	<classpathentry kind="output" path="build/classes"/>
+</classpath>
